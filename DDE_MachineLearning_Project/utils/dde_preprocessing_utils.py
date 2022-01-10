@@ -16,7 +16,6 @@ def set_timestamp_index(df,time_col):
     """
 
     datetime_series =  pd.to_datetime(df[time_col],utc=True)
-    #datetime_series = datetime_series.tz_convert("Europe/Berlin")
     
     datetime_index = pd.DatetimeIndex(datetime_series.values,tz='UTC')
     df=(df.set_index(datetime_index)).drop([time_col],axis=1)
@@ -29,7 +28,7 @@ def reorder_columns(df,order):
     """
 
     new_order= order + [x for x in df.columns if x not in order]
-    df = df.reindex(columns=new_order)#axis='columns',)
+    df = df.reindex(columns=new_order)
     return df
 
 def remove_duplicates(df):
@@ -106,7 +105,11 @@ def extract_correlations(correlationMatrix,upper_treshhold,lower_treshhold):
 
 
 def prepare_data_sarimax(data_y_train,data_y_test,exog_y_train,exog_y_test,horizon,training_window,feature,exog_feature):
+    """
+    Preparing data for SARIMAX model
+    """
     test_shifted = data_y_test.copy()
+    
     #preparing the shifted test data:
     for t in range(1, horizon):
         test_shifted[feature+'+'+str(t)] = test_shifted[feature].shift(-t, freq='H')
@@ -132,8 +135,9 @@ def prepare_data_sarimax(data_y_train,data_y_test,exog_y_train,exog_y_test,horiz
     
 
 def create_test_train_split(df_x=None,df_y=None,train_start=None,test_start=None,test_end=None,validation_start=None):
-    # Train-Test Split:
-    # We will split the data as training and test. No need for validation here. 
+    """
+    Creating a test-train-data-split
+    """
     df_x.index.freq = 'h'
     df_y.index.freq = 'h'
         
@@ -154,6 +158,9 @@ def create_test_train_split(df_x=None,df_y=None,train_start=None,test_start=None
 
 
 def create_sarimax_test_train_split(df,feature,exog_feature,train_start=None,test_start=None,test_end=None,):
+    """
+    Creating a test-train-data-split for SARIMAX model
+    """
     data_y_train = df.copy()[(df.index >= train_start)& (df.index < test_start)][[feature]]
     data_y_test = df.copy()[(df.index >= test_start) & (df.index < test_end)][[feature]]
     data_exog_train = df.copy()[(df.index >= train_start)& (df.index < test_start)][[exog_feature]]
@@ -162,6 +169,9 @@ def create_sarimax_test_train_split(df,feature,exog_feature,train_start=None,tes
     pass
 
 def create_eval_df(predictions,data_y_test):
+    """
+    Creating a evaluation dataframe  to compare predictions and actual data 
+    """
     eval_df = pd.DataFrame(predictions)
     eval_df.columns = ['Prediction']
     eval_df = (eval_df.set_index(data_y_test.index))
@@ -170,6 +180,9 @@ def create_eval_df(predictions,data_y_test):
 
 
 def convert_to_sample_time_feature(data_x,data_y,n_inputs,n_outputs,batch_size):
+    """
+    Converting test-train-data-split into (sample,time,feature)-format for Recurrent Neural Networks.
+    """
     remainder = len(data_y)%batch_size
     first_date_index = data_y.index[0] 
     last_date_index = data_y.index[-1] - timedelta(hours = remainder+n_outputs)
@@ -190,11 +203,3 @@ def convert_to_sample_time_feature(data_x,data_y,n_inputs,n_outputs,batch_size):
     date_index_range = date_index_range[:len(Y)]
     return np.array(X),np.array(Y), date_index_range 
 
-
-
-# def convert_to_rnn_train_test_split(data_x_train,data_y_train,n_inputs,n_outputs,batch_size):
-#     remainder = len(data_y_train)%batch_size
-#     data_x_train = data_x_train[:-remainder]
-#     data_y_train = data_y_train[:-remainder]
-#     print(data_x_train)
-#     pass
