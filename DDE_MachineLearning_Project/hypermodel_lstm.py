@@ -49,10 +49,6 @@ class HypermodelLSTM(kt.HyperModel):
         self.feature_df = self.df[[self.feature]]
         self.data_x_train0,self.data_x_val0,self.data_x_test0,self.data_y_train0,self.data_y_val0,self.data_y_test0 = create_test_train_split(self.scaled_df,self.feature_df,self.train_start,self.test_start,self.test_end,validation_start=self.validation_start)
         
-        self.data_x_train,self.data_y_train,self.idx_train = convert_to_sample_time_feature(self.data_x_train0,self.data_y_train0,72,24,32)
-        self.data_x_test,self.data_y_test,self.idx_test = convert_to_sample_time_feature(self.data_x_test0,self.data_y_test0,72,24,32)
-        self.data_x_val,self.data_y_val,self.idx_val = convert_to_sample_time_feature(self.data_x_val0,self.data_y_val0,72,24,32)
-        
     def load_data(self):
         self.df = pd.read_csv('preprocessed_data.csv')
         self.df = set_timestamp_index(self.df,"Unnamed: 0")
@@ -65,6 +61,11 @@ class HypermodelLSTM(kt.HyperModel):
         self.scaled_df.loc[:,featuresToScale] = sX.fit_transform(self.scaled_df[featuresToScale])
     
     def build(self, hp):
+        
+        self.data_x_train,self.data_y_train,self.idx_train = convert_to_sample_time_feature(self.data_x_train0,self.data_y_train0,hp.Int('past_days',min_value=24,max_value=168,step=24),24,32)
+        self.data_x_test,self.data_y_test,self.idx_test = convert_to_sample_time_feature(self.data_x_test0,self.data_y_test0,hp.Int('past_days',min_value=24,max_value=168,step=24),24,32)
+        self.data_x_val,self.data_y_val,self.idx_val = convert_to_sample_time_feature(self.data_x_val0,self.data_y_val0,hp.Int('past_days',min_value=24,max_value=168,step=24),24,32)
+        
         n_timesteps, n_features, n_outputs = self.data_x_train.shape[1], self.data_x_train.shape[2], self.data_y_train.shape[1]
         model = models.Sequential()
         
