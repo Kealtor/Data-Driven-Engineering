@@ -8,6 +8,8 @@ import matplotlib as mpl
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 from datetime import timedelta
+
+from sklearn.metrics import r2_score
 months_list = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 def set_timestamp_index(df,time_col):
@@ -203,3 +205,45 @@ def convert_to_sample_time_feature(data_x,data_y,n_inputs,n_outputs,batch_size):
     date_index_range = date_index_range[:len(Y)]
     return np.array(X),np.array(Y), date_index_range 
 
+def convert_from_differencing(Y_test_predictions,base_df,feature):
+    idx_init = Y_test_predictions.index[0] - timedelta(hours=1)
+    init_val = base_df.loc[idx_init,feature]
+    Y_test_predictions.loc[idx_init] = init_val
+    Y_test_predictions.sort_index(inplace=True)
+    Y_test_predictions = Y_test_predictions.cumsum()[1:]
+    return Y_test_predictions
+
+
+def make_multiple_predictions(model,idx_test,data_x_test,base_df,feature,convert=False):
+    idx_prediction = pd.date_range(start=idx_test[0],freq='h',periods=len(idx_test)+24)
+    y_test_filtered = base_df.loc[idx_prediction][feature]
+    df_pred =pd.DataFrame(index=y_test_filtered.index)
+        
+    for i in range(len(data_x_test)):
+        case_test = data_x_test[i].reshape((1,data_x_test[0].shape[0], data_x_test[0].shape[1]))
+        date_range = pd.date_range(start=idx_test[i],freq='h',periods=24)
+        Y_test_predictions = pd.Series(model.predict(case_test).flatten(),index=date_range)
+        if convert:
+            Y_test_predictions = convert_from_differencing(Y_test_predictions,base_df,feature)
+        df_pred[f'pred_{i}'] = Y_test_predictions
+        
+    df_pred['mean'] = df_pred.mean(axis=1)
+    df_pred['Actual'] = y_test_filtered
+    return df_pred
+
+def calculate_r2_scores(df_pred):
+    r2_list=[]
+    for column in df_pred.columns:
+        if column not in ['Actual','mean']:
+            pred = df_pred[column].dropna()
+            act = df_pred.loc[pred.index,'Actual']
+            r2= r2_score(pred,act)
+            r2_list.append(r2)
+    return r2_list      
+
+def apply_differencing(df,excluded):
+    included = [x for x in df.columns if x not in excluded]
+    included_df = df[included].diff().dropna()
+    excluded_df = df[excluded][1:]
+    merged_df = pd.concat([included_df,excluded_df],axis=1)
+    return merged_df
