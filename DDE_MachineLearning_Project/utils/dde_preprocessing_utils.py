@@ -140,8 +140,8 @@ def create_test_train_split(df_x=None,df_y=None,train_start=None,test_start=None
     """
     Creating a test-train-data-split
     """
-    df_x.index.freq = 'h'
-    df_y.index.freq = 'h'
+    # df_x.index.freq = 'h'
+    # df_y.index.freq = 'h'
         
     data_x_test = df_x.copy()[(df_x.index >= test_start) & (df_x.index < test_end)]
     data_y_test = df_y.copy()[(df_y.index >= test_start) & (df_y.index < test_end)]
