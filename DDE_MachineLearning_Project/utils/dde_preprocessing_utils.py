@@ -159,6 +159,18 @@ def create_test_train_split(df_x=None,df_y=None,train_start=None,test_start=None
         return data_x_train,data_x_test,data_y_train,data_y_test
 
 
+def create_split(df_x=None,df_y=None,start=None,end=None):
+    """
+    Creating a test-train-data-split
+    """
+    # df_x.index.freq = 'h'
+    # df_y.index.freq = 'h'
+        
+    data_x = df_x.copy()[(df_x.index >= start) & (df_x.index < end)]
+    data_y = df_y.copy()[(df_y.index >= start) & (df_y.index < end)]
+    
+    return data_x,data_y
+
 def create_sarimax_test_train_split(df,feature,exog_feature,train_start=None,test_start=None,test_end=None,):
     """
     Creating a test-train-data-split for SARIMAX model

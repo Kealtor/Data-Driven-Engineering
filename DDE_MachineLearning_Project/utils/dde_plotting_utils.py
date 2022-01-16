@@ -97,3 +97,7 @@ def plot_multiple_predictions(df_pred,path,add_traces = False):
     fig.savefig(path)
     return fig
     pass
+
+def plot_evaluation():
+    fig, ax = plt.subplots(figsize = (16,8))
+    pass
