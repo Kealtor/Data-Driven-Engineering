@@ -8,6 +8,7 @@ import matplotlib as mpl
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 from datetime import timedelta
+from scipy.signal import savgol_filter
 
 from sklearn.metrics import r2_score
 months_list = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -106,7 +107,7 @@ def extract_correlations(correlationMatrix,upper_treshhold,lower_treshhold):
 
 
 
-def prepare_data_sarimax(data_y_train,data_y_test,exog_y_train,exog_y_test,horizon,training_window,feature,exog_feature):
+def prepare_data_sarimax(data_y_train,data_y_test,horizon,training_window,feature,exog_feature=None,exog_y_train=None,exog_y_test=None):
     """
     Preparing data for SARIMAX model
     """
@@ -124,17 +125,18 @@ def prepare_data_sarimax(data_y_train,data_y_test,exog_y_train,exog_y_test,horiz
     #Creating the history -> df
     history = train_ts.copy()
     history = history[(-training_window):]
-
-    #Exogenous variables: -> df
-    history_temp = exog_y_train[exog_feature]
-    history_temp = history_temp[(-training_window):]
-    predictions_temp = exog_y_test[exog_feature]
-
     #Creating predictions to store the model outcomes: -> list
     predictions = list()
     
-    return test_ts,history,predictions,history_temp,predictions_temp
-    
+    if exog_feature!= None:
+        #Exogenous variables: -> df
+        history_temp = exog_y_train[exog_feature]
+        history_temp = history_temp[(-training_window):]
+        predictions_temp = exog_y_test[exog_feature]
+        return test_ts,history,predictions,history_temp,predictions_temp
+    else:
+        return test_ts,history,predictions
+            
 
 def create_test_train_split(df_x=None,df_y=None,train_start=None,test_start=None,test_end=None,validation_start=None):
     """
@@ -227,7 +229,7 @@ def convert_from_differencing(Y_test_predictions,base_df,feature):
 
 
 def make_multiple_predictions(model,idx_test,data_x_test,base_df,feature,convert=False):
-    idx_prediction = pd.date_range(start=idx_test[0],freq='h',periods=len(idx_test)+24)
+    idx_prediction = pd.date_range(start=idx_test[0],freq='h',periods=len(idx_test)+23)
     y_test_filtered = base_df.loc[idx_prediction][feature]
     df_pred =pd.DataFrame(index=y_test_filtered.index)
         
@@ -257,5 +259,12 @@ def apply_differencing(df,excluded):
     included = [x for x in df.columns if x not in excluded]
     included_df = df[included].diff().dropna()
     excluded_df = df[excluded][1:]
+    merged_df = pd.concat([included_df,excluded_df],axis=1)
+    return merged_df
+
+def apply_savgol_filter(df,window,order,deriv=0,excluded=[]):
+    included = [x for x in df.columns if x not in excluded]
+    included_df = pd.DataFrame(savgol_filter(df[included],window,order,deriv,axis=0), index = df.index, columns=included)
+    excluded_df = df[excluded]
     merged_df = pd.concat([included_df,excluded_df],axis=1)
     return merged_df
