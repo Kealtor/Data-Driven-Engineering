@@ -1,0 +1,41 @@
+generation:
+- generation biomass
+- generation fossil brown coal/lignite
+- generation fossil gas
+- generation fossil hard coal
+- generation fossil oil
+- generation hydro pumped storage
+- generation hydro run-of-river and poundage
+- generation hydro water reservoir
+- generation nuclear
+- generation other
+- generation other renewable
+- generation solar
+- generation waste
+- generation wind onshore
+share:
+- share biomass
+- share fossil brown coal/lignite
+- share fossil gas
+- share fossil hard coal
+- share fossil oil
+- share hydro pumped storage
+- share hydro run-of-river and poundage
+- share hydro water reservoir
+- share nuclear
+- share other
+- share other renewable
+- share solar
+- share waste
+- share wind onshore
+time:
+- month
+- day
+- weekend
+- hour
+weather:
+- temp
+- pressure
+- humidity
+- wind_speed
+- wind_deg
