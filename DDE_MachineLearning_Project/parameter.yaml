@@ -34,8 +34,8 @@ time:
 - weekend
 - hour
 weather:
-- temp
-- pressure
-- humidity
-- wind_speed
-- wind_deg
+- temp_Valencia
+- pressure_Valencia
+- humidity_Valencia
+- wind_speed_Valencia
+- wind_deg_Valencia

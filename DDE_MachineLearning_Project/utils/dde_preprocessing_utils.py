@@ -1,3 +1,4 @@
+from os import rename
 import numpy as np
 import pandas as pd
 from datetime import date
@@ -255,12 +256,14 @@ def calculate_r2_scores(df_pred):
             r2_list.append(r2)
     return r2_list      
 
-def apply_differencing(df,excluded):
-    included = [x for x in df.columns if x not in excluded]
-    included_df = df[included].diff().dropna()
-    excluded_df = df[excluded][1:]
-    merged_df = pd.concat([included_df,excluded_df],axis=1)
-    return merged_df
+def apply_differencing(df):
+    diff_df = df.diff()
+    rename_map_diff = {}
+
+    for col in df.columns:
+        rename_map_diff[col] = col + "_diff"
+    diff_df.rename(columns=rename_map_diff,inplace=True)
+    return diff_df
 
 def apply_savgol_filter(df,window,order,deriv=0,excluded=[]):
     included = [x for x in df.columns if x not in excluded]
